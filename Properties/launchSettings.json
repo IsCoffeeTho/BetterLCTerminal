@@ -1,0 +1,10 @@
+{
+	"profiles": {
+		"BetterLCTerminal": {
+			"commandName": "Project",
+			"environmentVariables": {
+				"LETHAL_COMPANY_DIR": "..\\Lethal Company"
+			}
+		}
+	}
+}
