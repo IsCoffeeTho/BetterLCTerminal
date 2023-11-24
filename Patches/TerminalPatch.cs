@@ -2,34 +2,41 @@ using HarmonyLib;
 using BetterLCTerminal;
 using TMPro;
 using System;
+using BepInEx;
+using BepInEx.Configuration;
 
 namespace BetterLCTerminal.Patches
 {
 	[HarmonyPatch(typeof(Terminal))]
 	internal class TerminalPatch
 	{
-		// TODO: better command system
-		// 
+		// Speculation:
 		// inputFieldText // where text goes to be displayed
 		// screenText // where text comes in from presummably
 
 		public static TerminalPatch instance;
 		public cmd.Env Environment = new();
 
+		public TemrinalMod BaseMod;
+		
 		public TerminalPatch()
 		{
-			Environment.Cmds.Add("help", new cmd.Help());
+			instance.BaseMod = TemrinalMod.Instance;
+			// TODO: add more commands
+			Environment.Cmds.AddItem(new cmd.Help());
+
+			Environment.calculateLuT();
 			// Environment.Cmds.Add("ls", new cmd.Bestiary());
 		}
 
 		[HarmonyPatch("Start")]
 		[HarmonyPostfix]
-		static void ConfigureTerminalObject(ref TextMeshProUGUI ___inputFieldText, ref TerminalNode ___currentNode)
+		static void ConfigureTerminalObject(ref TextMeshProUGUI ___inputFieldText)
 		{
 			if (instance == null)
 				instance = new TerminalPatch();
-			___inputFieldText.richText = true;
-			
+			// ___inputFieldText.fontSize = instance.BaseMod.CFG_textsize.Value;
+
 		}
 
 		[HarmonyPatch("selectTextFieldDelayed")]

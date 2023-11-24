@@ -1,4 +1,5 @@
 ﻿using BepInEx;
+using BepInEx.Configuration;
 using BepInEx.Logging;
 using HarmonyLib;
 
@@ -12,12 +13,18 @@ namespace BetterLCTerminal
 		private readonly Harmony harmony = new Harmony(MOD_GUID);
 		public static TemrinalMod Instance;
 		internal ManualLogSource mls;
+
+		public ConfigEntry<int> CFG_textsize;
 		private void Awake()
 		{
 			if (Instance == null)
 				Instance = this;
 
 			mls = BepInEx.Logging.Logger.CreateLogSource(MOD_GUID);
+			CFG_textsize = Config.Bind("Terminal",
+				"TextSize", 2,
+				"Font Size 1 - 4"
+			);
 
 			mls.LogInfo("Plugin BetterLCTerminal is loaded! MOD_GUID: 'IsCoffeeTho.Terminal'");
 
