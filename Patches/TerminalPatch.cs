@@ -4,6 +4,8 @@ using TMPro;
 using System;
 using BepInEx;
 using BepInEx.Configuration;
+using UnityEngine.UIElements.Collections;
+using BetterLCTerminal.cmd;
 
 namespace BetterLCTerminal.Patches
 {
@@ -18,15 +20,27 @@ namespace BetterLCTerminal.Patches
 		public cmd.Env Environment = new();
 
 		public TemrinalMod BaseMod;
-		
+
 		public TerminalPatch()
 		{
 			instance.BaseMod = TemrinalMod.Instance;
+			
 			// TODO: add more commands
 			Environment.Cmds.AddItem(new cmd.Help());
+			// Environment.Cmds.Add("ls", new cmd.Bestiary());
 
 			Environment.calculateLuT();
-			// Environment.Cmds.Add("ls", new cmd.Bestiary());
+		}
+
+		public int ExecuteCommand(string[] v)
+		{
+			if (Environment.CommandLuT.ContainsKey(v[0]))
+			{
+				stdpcs environment = new();
+				
+				return Environment.CommandLuT.Get(v[0]).Run(environment, v);
+			}
+			return -1;
 		}
 
 		[HarmonyPatch("Start")]

@@ -48,7 +48,7 @@ namespace BetterLCTerminal.cmd
 	{
 		public Dictionary<string, string> Vars = new();
 		public ICommand[] Cmds = new ICommand[20];
-		protected Dictionary<string, ICommand> CommandLuT = new();
+		public Dictionary<string, ICommand> CommandLuT = new();
 		public string Username;
 		public int UUID;
 		static string Hostname => "QuotaShip";
