@@ -5,7 +5,6 @@ using System;
 using BepInEx;
 using BepInEx.Configuration;
 using UnityEngine.UIElements.Collections;
-using BetterLCTerminal.cmd;
 
 namespace BetterLCTerminal.Patches
 {
@@ -17,18 +16,23 @@ namespace BetterLCTerminal.Patches
 		// screenText // where text comes in from presummably
 
 		public static TerminalPatch instance;
-		public cmd.Env Environment = new();
+		public stdlib.Env Environment = new();
+		private string ANSI_BUFFER = "";
+
+		private bool ANSI_TOGGLE = false;
 
 		public TemrinalMod BaseMod;
 
 		public TerminalPatch()
 		{
 			instance.BaseMod = TemrinalMod.Instance;
-			
 			// TODO: add more commands
 			Environment.Cmds.AddItem(new cmd.Help());
-			// Environment.Cmds.Add("ls", new cmd.Bestiary());
-
+			Environment.Cmds.AddItem(new cmd.Echo());
+			Environment.Cmds.AddItem(new cmd.Clear());
+			Environment.Cmds.AddItem(new cmd.Cam());
+			Environment.Cmds.AddItem(new cmd.Cat());
+			Environment.Cmds.AddItem(new cmd.List());
 			Environment.calculateLuT();
 		}
 
@@ -36,11 +40,33 @@ namespace BetterLCTerminal.Patches
 		{
 			if (Environment.CommandLuT.ContainsKey(v[0]))
 			{
-				stdpcs environment = new();
-				
-				return Environment.CommandLuT.Get(v[0]).Run(environment, v);
+				stdlib.process p = new();
+				p.stdout.OnData += ANSI_translate;
+				p.stderr.OnData += ANSI_translate;
+				// hook environment to terminal
+				return Environment.CommandLuT.Get(v[0]).Run(p, v);
 			}
 			return -1;
+		}
+
+		static void ANSI_translate(object sender, stdlib.FD_OnData_args args)
+		{
+			char[] char_vec = args.Data.ToCharArray();
+			for (int i = 0; i < char_vec.Length; i++) {
+				if (instance.ANSI_TOGGLE) {
+					instance.ANSI_BUFFER += char_vec[i];
+					if ("".Contains(char_vec[i])) {
+
+					}
+				} else {
+					if (char_vec[i] == '\x1b') {
+						instance.ANSI_BUFFER = "";
+						instance.ANSI_TOGGLE = true;
+					} else {
+						// place character on screen
+					}
+				}
+			}
 		}
 
 		[HarmonyPatch("Start")]
@@ -64,7 +90,7 @@ namespace BetterLCTerminal.Patches
 
 		[HarmonyPatch("BeginUsingTerminal")]
 		[HarmonyPostfix]
-		static void ReplaceText(ref TerminalNode ___currentNode, ref string ___currentText)
+		static void TEST_ReplaceText(ref TerminalNode ___currentNode, ref string ___currentText)
 		{
 			___currentText = "TERM";
 			___currentNode.displayText = "TERM";

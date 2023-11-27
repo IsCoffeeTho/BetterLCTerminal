@@ -1,22 +1,23 @@
 using HarmonyLib;
 using BetterLCTerminal;
-using BetterLCTerminal.cmd;
+using BetterLCTerminal.stdlib;
 using System.Collections.ObjectModel;
 
 namespace BetterLCTerminal.cmd
 {
-	public class Help : ICommand
+	public class Help : IProcess
 	{
-		string ICommand.Name => "help";
+		string IProcess.Name => "help";
 
 		public static readonly ReadOnlyCollection<string> Aliases = new(
 			new string[] {
+				"man"
 			}
 		);
 
-		string ICommand.Description => "Displays commands for user to use";
+		string IProcess.Description => "Displays commands for user to use";
 
-		public int Run(stdpcs process, string[] args)
+		public int Run(process p, string[] args)
 		{
 			
 			return 0;

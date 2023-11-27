@@ -1,14 +1,14 @@
 using HarmonyLib;
 using BetterLCTerminal;
-using BetterLCTerminal.cmd;
+using BetterLCTerminal.stdlib;
 using System.Collections.ObjectModel;
 
 namespace BetterLCTerminal.cmd
 {
-	public class Clear : ICommand
+	public class Clear : IProcess
 	{
-		string ICommand.Name => "clear";
-		string ICommand.Description => "Clears the screen";
+		string IProcess.Name => "clear";
+		string IProcess.Description => "Clears the screen";
 
 		public static readonly ReadOnlyCollection<string> Aliases = new(
 			new string[] {
@@ -16,9 +16,9 @@ namespace BetterLCTerminal.cmd
 			}
 		);
 
-		public int Run(stdpcs process, string[] args)
+		public int Run(process p, string[] args)
 		{
-			process.Print("\x1b[H\x1b[3J");
+			p.Print("\x1b[H\x1b[3J");
 			return 0;
 		}
 	}

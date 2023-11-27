@@ -1,23 +1,24 @@
 using HarmonyLib;
 using BetterLCTerminal;
-using BetterLCTerminal.cmd;
+using BetterLCTerminal.stdlib;
 using System.Collections.ObjectModel;
 
 namespace BetterLCTerminal.cmd
 {
-	public class Echo : ICommand {
+	public class Echo : IProcess {
 
-		string ICommand.Name => "echo";
-		string ICommand.Description => "Prints text back into terminal";
+		string IProcess.Name => "echo";
+		string IProcess.Description => "Prints text back into terminal";
 
 		public static readonly ReadOnlyCollection<string> Aliases = new(
 			new string[] {
+				"say"
 			}
 		);
 
-		public int Run(stdpcs process, string[] args)
+		public int Run(process p, string[] args)
 		{
-			process.Print(args.Join(null, " "));
+			p.Print(args.Join(null, " "));
 			return 0;
 		}
 	}
