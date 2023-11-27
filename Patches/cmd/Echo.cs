@@ -3,7 +3,7 @@ using BetterLCTerminal;
 using BetterLCTerminal.stdlib;
 using System.Collections.ObjectModel;
 
-namespace BetterLCTerminal.cmd
+namespace BetterLCTerminal.command
 {
 	public class Echo : IProcess {
 
@@ -16,7 +16,7 @@ namespace BetterLCTerminal.cmd
 			}
 		);
 
-		public int Run(process p, string[] args)
+		public int Run(StdLib p, string[] args)
 		{
 			p.Print(args.Join(null, " "));
 			return 0;

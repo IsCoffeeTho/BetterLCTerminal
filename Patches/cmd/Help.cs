@@ -3,7 +3,7 @@ using BetterLCTerminal;
 using BetterLCTerminal.stdlib;
 using System.Collections.ObjectModel;
 
-namespace BetterLCTerminal.cmd
+namespace BetterLCTerminal.command
 {
 	public class Help : IProcess
 	{
@@ -17,7 +17,7 @@ namespace BetterLCTerminal.cmd
 
 		string IProcess.Description => "Displays commands for user to use";
 
-		public int Run(process p, string[] args)
+		public int Run(StdLib p, string[] args)
 		{
 			
 			return 0;
