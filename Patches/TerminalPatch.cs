@@ -25,17 +25,23 @@ namespace BetterLCTerminal.Patches
 			instance.shell = new();
 		}
 
-		[HarmonyPatch("Start")]
+		[HarmonyPatch(typeof(Terminal), "Start")]
 		[HarmonyPostfix]
-		static void ConfigureTerminalObject(ref TMP_InputField __screenText)
+		static void CreateInstance()
 		{
 			instance ??= new TerminalPatch();
-			__screenText.pointSize = 11 + (2 * (instance.BaseMod.CFG_textsize.Value - 1));
+		}
+
+		[HarmonyPatch(typeof(Terminal), "BeginUsingTerminal")]
+		[HarmonyPostfix]
+		static void ConfigureTerminalObject(ref TMP_InputField __screenText) {
+			float scale = instance.BaseMod.CFG_textsize.Value; // retrieves saved value
+			__screenText.pointSize = 11 + (2 * (scale - 1));
 			__screenText.caretWidth = 5;
 			__screenText.caretBlinkRate = 0;
 		}
 
-		[HarmonyPatch("TextChanged")]
+		[HarmonyPatch(typeof(Terminal), "TextChanged")]
 		[HarmonyPrefix]
 		static bool GetText()
 		{

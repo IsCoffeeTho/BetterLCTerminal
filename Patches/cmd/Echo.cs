@@ -10,12 +10,6 @@ namespace BetterLCTerminal.command
 		string IProcess.Name => "echo";
 		string IProcess.Description => "Prints text back into terminal";
 
-		public static readonly ReadOnlyCollection<string> Aliases = new(
-			new string[] {
-				"say"
-			}
-		);
-
 		public int Run(StdLib p, string[] args)
 		{
 			p.Print(args.Join(null, " "));

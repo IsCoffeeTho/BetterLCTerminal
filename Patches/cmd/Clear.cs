@@ -9,12 +9,6 @@ namespace BetterLCTerminal.command
 	{
 		string IProcess.Name => "clear";
 		string IProcess.Description => "Clears the screen";
-		
-		public static readonly ReadOnlyCollection<string> Aliases = new(
-			new string[] {
-				"cls"
-			}
-		);
 
 		public int Run(StdLib p, string[] args)
 		{
