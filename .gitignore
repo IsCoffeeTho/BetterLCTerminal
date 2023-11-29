@@ -1,6 +1,6 @@
 .*
 !.gitignore
-mod
+*.dll
 *.zip
 bin
 obj

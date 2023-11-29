@@ -14,7 +14,6 @@ namespace BetterLCTerminal
 		private const string MOD_GUID = "IsCoffeeTho.Terminal";
 		private readonly Harmony harmony = new(MOD_GUID);
 		public static TerminalMod Instance;
-
 		public static Shell __term;
 		internal ManualLogSource mls;
 		public ConfigEntry<int> CFG_textsize;
@@ -25,7 +24,7 @@ namespace BetterLCTerminal
 
 			Instance.CFG_textsize = Config.Bind("Terminal",
 				"TextSize", 12,
-				"Font Size - Minimum of 10"
+				"Font Size - min: 10"
 			);
 			Instance.CFG_textsize.Value = Math.Max(Instance.CFG_textsize.Value, 10);
 
@@ -45,6 +44,20 @@ namespace BetterLCTerminal
 			___screenText.caretWidth = (int)(scale / 2f);
 			___screenText.caretBlinkRate = 0;
 			__term = new();
+		}
+
+		[HarmonyPatch(typeof(Terminal), "BeginUsingTerminal")]
+		[HarmonyPostfix]
+		static void CreateTMPfs()
+		{
+			__term.FileSystem.MkDir("/tmp");
+		}
+
+		[HarmonyPatch(typeof(Terminal), "QuitTerminal")]
+		[HarmonyPostfix]
+		static void DeleteTMPfs()
+		{
+			__term.FileSystem.Rm("/tmp");
 		}
 	}
 }

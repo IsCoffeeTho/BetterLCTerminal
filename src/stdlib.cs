@@ -3,7 +3,7 @@ using UnityEngine.UI;
 
 namespace BetterLCTerminal
 {
-	class StdLib
+	public class StdLib
 	{
 		private IFileDescriptor[] FileDescriptorTable = new IFileDescriptor[256];
 		public StdLib()
@@ -49,7 +49,7 @@ namespace BetterLCTerminal
 
 
 	}
-	interface IProcess
+	public interface IProcess
 	{
 		int Main(StdLib p, string[] args);
 	}
