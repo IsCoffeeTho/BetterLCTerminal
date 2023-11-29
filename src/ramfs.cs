@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using HarmonyLib;
 using UnityEngine.UI;
 
 namespace BetterLCTerminal.fs
@@ -13,9 +14,11 @@ namespace BetterLCTerminal.fs
 		{
 			Root = new();
 		}
-		private string SanitizePathName(string pathname) {
-			while (pathname.EndsWith("/")) {
-				pathname = pathname[..-1];
+		private string SanitizePathName(string pathname)
+		{
+			while (pathname.EndsWith("/") && pathname.Length != 1)
+			{
+				pathname = pathname.Substring(0, pathname.Length - 1);
 			}
 			return pathname;
 		}
@@ -23,22 +26,27 @@ namespace BetterLCTerminal.fs
 		{
 			Stat current = Root;
 
+			string resolvedPath = "/";
+
 			for (int i = 0; i < pathTree.Length; i++)
 			{
 				if (current.Type != "Dir")
-					throw new Exception("ENOENT");
+					throw new Exception($"ENOENT: {resolvedPath.Substring(0, resolvedPath.Length - 1)}");
+
+				resolvedPath += $"{pathTree[i]}/";
 
 				if (!((Dir)current).Entries.TryGetValue(pathTree[i], out current))
-					throw new Exception("ENOENT");
+					throw new Exception($"ENOENT: {resolvedPath.Substring(0, resolvedPath.Length - 1)}");
 
 				if (current.Type == "Link")// resolve link
 				{
 					if (current.Equals(((Link)current).Refer))
-						throw new Exception("ECYCLIC");
+						throw new Exception($"ECYCLIC: {resolvedPath.Substring(0, resolvedPath.Length - 1)}");
 					if (((Link)current).Refer.Type == "Link")
-						throw new Exception("ELNKV");
+						throw new Exception($"ELNKV: {resolvedPath.Substring(0, resolvedPath.Length - 1)}");
 					current = ((Link)current).Refer;
 				}
+
 			}
 			return current;
 		}
@@ -46,20 +54,25 @@ namespace BetterLCTerminal.fs
 		{
 			Stat current = Root;
 
+			string resolvedPath = "/";
+
 			for (int i = 0; i < pathTree.Length; i++)
 			{
 				if (current.Type == "Link")// resolve link
 				{
 					if (current.Equals(((Link)current).Refer))
-						throw new Exception("ECYCLIC");
+						throw new Exception($"ECYCLIC: {resolvedPath.Substring(0, resolvedPath.Length - 1)}");
 					if (((Link)current).Refer.Type == "Link")
-						throw new Exception("ELNKV");
+						throw new Exception($"ELNKV: {resolvedPath.Substring(0, resolvedPath.Length - 1)}");
 					current = ((Link)current).Refer;
+					resolvedPath += $"{pathTree[i]}/";
 					continue;
 				}
 
 				if (current.Type != "Dir")
 					throw new Exception("ENOENT");
+
+				resolvedPath += $"{pathTree[i]}/";
 
 				if (!((Dir)current).Entries.TryGetValue(pathTree[i], out current))
 					throw new Exception("ENOENT");
@@ -67,10 +80,11 @@ namespace BetterLCTerminal.fs
 			return current;
 		}
 
-		public void Rm(string pathname) {
-			if (!pathname.StartsWith("/"))
-				throw new Exception("ENOENT");
+		public void Rm(string pathname)
+		{
 			pathname = SanitizePathName(pathname);
+			if (!pathname.StartsWith("/"))
+				throw new Exception($"ENOENT: {pathname}");
 
 			string[] pathTree = pathname[1..].Split("/");
 			string NameOfThingToRemove = pathTree.Last();
@@ -79,10 +93,12 @@ namespace BetterLCTerminal.fs
 
 			Stat ThingToRemove = SearchPathTree(pathTree);
 
-			if (ThingToRemove.Type == "Dir") {
+			if (ThingToRemove.Type == "Dir")
+			{
 				Dir d = (Dir)ThingToRemove;
 				string[] entryNames = d.Entries.Keys.ToArray();
-				for (int i = 0; i < entryNames.Length; i++) {
+				for (int i = 0; i < entryNames.Length; i++)
+				{
 					Rm($"{pathname}/{entryNames[i]}");
 				}
 			}
@@ -91,9 +107,9 @@ namespace BetterLCTerminal.fs
 
 		public Stat StatPath(string pathname)
 		{
-			if (!pathname.StartsWith("/"))
-				throw new Exception("ENOENT");
 			pathname = SanitizePathName(pathname);
+			if (!pathname.StartsWith("/"))
+				throw new Exception($"ENOENT: {pathname}");
 
 			string[] pathTree = pathname[1..].Split("/");
 			if (pathTree.Length == 0)
@@ -104,24 +120,26 @@ namespace BetterLCTerminal.fs
 
 		public Dir MkDir(string pathname)
 		{
-			if (!pathname.StartsWith("/"))
-				throw new Exception("ENOENT");
 			pathname = SanitizePathName(pathname);
+			if (!pathname.StartsWith("/"))
+				throw new Exception($"ENOENT: {pathname}");
 
 			string[] pathTree = pathname[1..].Split("/");
 			string dirName = pathTree.Last();
+			string[] parentTree;
 			if (pathTree.Length <= 1)
-				pathTree = new string[0];
+				parentTree = new string[0];
 			else
-				Array.Copy(pathTree, 0, pathTree, 0, pathTree.Length - 1);
+			{
+				parentTree = new string[pathTree.Length - 1];
+				Array.Copy(pathTree, 0, parentTree, 0, pathTree.Length - 1);
+			}
 
-			Stat directoryToPlaceIn = LookupPathTree(pathTree);
-
-			if (directoryToPlaceIn.Type != "Dir")
-				throw new Exception("ENOENT");
+			Stat directoryToPlaceIn = LookupPathTree(parentTree); if (directoryToPlaceIn.Type != "Dir")
+				throw new Exception($"ENOTDIR: /{parentTree.Join(null, "/")}");
 
 			if (((Dir)directoryToPlaceIn).Entries.ContainsKey(dirName))
-				throw new Exception("EEXIST");
+				throw new Exception($"EEXIST: {pathname}");
 
 			Dir directoryToMake = new()
 			{
@@ -135,24 +153,27 @@ namespace BetterLCTerminal.fs
 
 		public File Touch(string pathname)
 		{
-			if (!pathname.StartsWith("/"))
-				throw new Exception("ENOENT");
 			pathname = SanitizePathName(pathname);
+			if (!pathname.StartsWith("/"))
+				throw new Exception($"ENOENT: {pathname}");
 
 			string[] pathTree = pathname[1..].Split("/");
 			string fileName = pathTree.Last();
+			string[] parentTree;
 			if (pathTree.Length <= 1)
-				pathTree = new string[0];
+				parentTree = new string[0];
 			else
-				Array.Copy(pathTree, 0, pathTree, 0, pathTree.Length - 1);
+			{
+				parentTree = new string[pathTree.Length - 1];
+				Array.Copy(pathTree, 0, parentTree, 0, pathTree.Length - 1);
+			}
 
-			Stat directoryToPlaceIn = LookupPathTree(pathTree);
-
+			Stat directoryToPlaceIn = LookupPathTree(parentTree);
 			if (directoryToPlaceIn.Type != "Dir")
-				throw new Exception("ENOENT");
+				throw new Exception($"ENOTDIR: /{parentTree.Join(null, "/")}");
 
 			if (((Dir)directoryToPlaceIn).Entries.ContainsKey(fileName))
-				throw new Exception("EEXIST");
+				throw new Exception($"EEXIST: {pathname}");
 
 			File FileToTouch = new()
 			{
@@ -165,24 +186,29 @@ namespace BetterLCTerminal.fs
 
 		public Link SymLink(string LinkFrom, string LinkTo)
 		{
+			LinkFrom = SanitizePathName(LinkFrom);
 			if (!LinkFrom.StartsWith("/"))
-				throw new Exception("ENOENT");
+				throw new Exception($"ENOENT: {LinkFrom}");
+			LinkTo = SanitizePathName(LinkTo);
 			if (!LinkTo.StartsWith("/"))
-				throw new Exception("ENOENT");
+				throw new Exception($"EINVLD: {LinkTo}");
 
 			string[] pathTree = LinkFrom[1..].Split("/");
 			string linkName = pathTree.Last();
+			string[] parentTree;
 			if (pathTree.Length <= 1)
-				pathTree = new string[0];
+				parentTree = new string[0];
 			else
-				Array.Copy(pathTree, 0, pathTree, 0, pathTree.Length - 1);
+			{
+				parentTree = new string[pathTree.Length - 1];
+				Array.Copy(pathTree, 0, parentTree, 0, pathTree.Length - 1);
+			}
 
-			Stat directoryToPlaceIn = LookupPathTree(pathTree);
-
+			Stat directoryToPlaceIn = LookupPathTree(parentTree);
 			if (directoryToPlaceIn.Type != "Dir")
-				throw new Exception("ENOENT");
+				throw new Exception($"ENOTDIR: /{parentTree.Join(null, "/")}");
 			if (((Dir)directoryToPlaceIn).Entries.ContainsKey(linkName))
-				throw new Exception("EEXIST");
+				throw new Exception($"EEXIST: {LinkTo}");
 
 			Link symbolicLink = new()
 			{
@@ -197,24 +223,28 @@ namespace BetterLCTerminal.fs
 
 		public Pipe FIFO(string pathname)
 		{
+			pathname = SanitizePathName(pathname);
 			if (!pathname.StartsWith("/"))
-				throw new Exception("ENOENT");
+				throw new Exception($"ENOENT: {pathname}");
 			pathname = SanitizePathName(pathname);
 
 			string[] pathTree = pathname[1..].Split("/");
 			string PipeName = pathTree.Last();
+			string[] parentTree;
 			if (pathTree.Length <= 1)
-				pathTree = new string[0];
+				parentTree = new string[0];
 			else
-				Array.Copy(pathTree, 0, pathTree, 0, pathTree.Length - 1);
+			{
+				parentTree = new string[pathTree.Length - 1];
+				Array.Copy(pathTree, 0, parentTree, 0, pathTree.Length - 1);
+			}
 
-			Stat directoryToPlaceIn = LookupPathTree(pathTree);
-
+			Stat directoryToPlaceIn = LookupPathTree(parentTree);
 			if (directoryToPlaceIn.Type != "Dir")
-				throw new Exception("ENOENT");
+				throw new Exception($"ENOTDIR: /{parentTree.Join(null, "/")}");
 
 			if (((Dir)directoryToPlaceIn).Entries.ContainsKey(PipeName))
-				throw new Exception("EEXIST");
+				throw new Exception($"EEXIST: {pathname}");
 
 			Pipe PipeToCreate = new()
 			{
@@ -226,24 +256,28 @@ namespace BetterLCTerminal.fs
 		}
 		public Program AssignProgram(string pathname, IProcess program)
 		{
+			pathname = SanitizePathName(pathname);
 			if (!pathname.StartsWith("/"))
-				throw new Exception("ENOENT");
+				throw new Exception($"ENOENT: {pathname}");
 			pathname = SanitizePathName(pathname);
 
 			string[] pathTree = pathname[1..].Split("/");
 			string PipeName = pathTree.Last();
+			string[] parentTree;
 			if (pathTree.Length <= 1)
-				pathTree = new string[0];
+				parentTree = new string[0];
 			else
-				Array.Copy(pathTree, 0, pathTree, 0, pathTree.Length - 1);
+			{
+				parentTree = new string[pathTree.Length - 1];
+				Array.Copy(pathTree, 0, parentTree, 0, pathTree.Length - 1);
+			}
 
-			Stat directoryToPlaceIn = LookupPathTree(pathTree);
-
+			Stat directoryToPlaceIn = LookupPathTree(parentTree);
 			if (directoryToPlaceIn.Type != "Dir")
-				throw new Exception("ENOENT");
+				throw new Exception($"ENOTDIR: /{parentTree.Join(null, "/")}");
 
 			if (((Dir)directoryToPlaceIn).Entries.ContainsKey(PipeName))
-				throw new Exception("EEXIST");
+				throw new Exception($"EEXIST: {pathname}");
 
 			Program ProgramFile = new()
 			{
@@ -291,7 +325,8 @@ namespace BetterLCTerminal.fs
 	public class Stat
 	{
 		public int Size => 0;
-		public string Type {
+		public string Type
+		{
 			get
 			{
 				return this.GetType().Name;

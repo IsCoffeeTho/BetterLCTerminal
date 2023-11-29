@@ -17,16 +17,18 @@ namespace BetterLCTerminal
 			FileSystem.Touch("/etc/username").Data = GameNetworkManager.Instance.localPlayerController.playerUsername;
 
 			FileSystem.MkDir("/bin");
+
 			Type[] potentialCommands = Assembly.GetExecutingAssembly().GetTypes()
 				.Where(t => string.Equals(t.Namespace, "BetterLCTerminal.command", StringComparison.Ordinal))
 				.ToArray();
 
 			for (int i = 0; i < potentialCommands.Length; i++)
 			{
-				Type command = potentialCommands[i];
-				if (!typeof(IProcess).IsAssignableFrom(command)) // is a valid command
+				Type cmd = potentialCommands[i];
+				if (cmd == null)
 					continue;
-				FileSystem.AssignProgram($"/bin/{command.Name.ToLower()}", (IProcess)command);
+				if (typeof(IProcess).IsAssignableFrom(cmd)) // is a valid command
+					FileSystem.AssignProgram($"/bin/{cmd.Name.ToLower()}", (IProcess)Activator.CreateInstance(cmd)); // line needs a rewrite maybe
 			}
 		}
 	}
