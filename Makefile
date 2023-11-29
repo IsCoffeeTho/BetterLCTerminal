@@ -5,13 +5,23 @@
 #                                                            |     |       |   #
 #   Makefile                                                 |      \      |   #
 #                                                            |       |     |   #
-#   Last Edited: 11:05PM 23/11/2023                           \      |    /    #
+#   Last Edited: 11:42PM 28/11/2023                           \      |    /    #
 #                                                               \   /   /      #
 #                                                                              #
 # ============================================================================ #
 
-all: 
+MOD = BetterLCTerminal
+
+all: dll package
+
+dll:
 	dotnet build
+
+package:
+	cp bin/Debug/netstandard2.1/${MOD}.dll mod/BepInEx/plugins/${MOD}.dll
+	cd mod && zip -r ${MOD} ./*
+	mv mod/${MOD}.zip ${MOD}.zip
+
 
 clean:
 	rm -rf ./obj

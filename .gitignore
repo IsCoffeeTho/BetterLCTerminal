@@ -1,4 +1,6 @@
 .*
 !.gitignore
+mod
+*.zip
 bin
 obj
