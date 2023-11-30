@@ -15,7 +15,7 @@ namespace BetterLCTerminal
 		private readonly Harmony harmony = new(MOD_GUID);
 		public static TerminalMod Instance;
 		public static Shell __term;
-		internal ManualLogSource mls;
+		public ManualLogSource mls;
 		public ConfigEntry<int> CFG_textsize;
 		public void Awake()
 		{
@@ -28,9 +28,9 @@ namespace BetterLCTerminal
 			);
 			Instance.CFG_textsize.Value = Math.Max(Instance.CFG_textsize.Value, 10);
 
-			mls = BepInEx.Logging.Logger.CreateLogSource(MOD_GUID);
-			mls.LogInfo("Plugin BetterLCTerminal is loaded!");
-			mls.LogInfo("MOD_GUID: 'IsCoffeeTho.Terminal'");
+			Instance.mls = BepInEx.Logging.Logger.CreateLogSource(MOD_GUID);
+			Instance.mls.LogInfo("Plugin BetterLCTerminal is loaded!");
+			Instance.mls.LogInfo("MOD_GUID: IsCoffeeTho.Terminal");
 
 			harmony.PatchAll(typeof(TerminalMod));
 		}
@@ -39,6 +39,7 @@ namespace BetterLCTerminal
 		[HarmonyPostfix]
 		static void InstantiateShell(ref TMP_InputField ___screenText)
 		{
+			Instance.mls.LogMessage("Instancing terminal");
 			float scale = Instance.CFG_textsize.Value; // retrieves saved value
 			___screenText.pointSize = scale;
 			___screenText.caretWidth = (int)(scale / 2f);
@@ -46,17 +47,22 @@ namespace BetterLCTerminal
 			__term = new();
 		}
 
-		[HarmonyPatch(typeof(Terminal), "BeginUsingTerminal")]
-		[HarmonyPostfix]
-		static void CreateTMPfs()
+		[HarmonyPatch(typeof(Terminal), "selectTextFieldDelayed")]
+		[HarmonyPrefix]
+		static bool InitializeShellSession()
 		{
+			Instance.mls.LogMessage("Opened terminal: creating session");
+			if (HUDManager.Instance != null)
+				HUDManager.Instance.ChangeControlTip(0, "Quit terminal : [TAB]", clearAllOther: true);
 			__term.FileSystem.MkDir("/tmp");
+			return true;
 		}
 
 		[HarmonyPatch(typeof(Terminal), "QuitTerminal")]
 		[HarmonyPostfix]
-		static void DeleteTMPfs()
+		static void ExitShellSession()
 		{
+			Instance.mls.LogMessage("Closed terminal: exiting session");
 			__term.FileSystem.Rm("/tmp");
 		}
 	}

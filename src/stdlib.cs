@@ -8,7 +8,7 @@ namespace BetterLCTerminal
 		private IFileDescriptor[] FileDescriptorTable = new IFileDescriptor[256];
 		public StdLib()
 		{
-
+			
 		}
 
 		public int Write(int fd, string text)

@@ -30,8 +30,8 @@
 	<Reference Include="UnityEngine.UI">
 		<HintPath>..\\Lethal Company\\Lethal Company_Data\\Managed\\UnityEngine.UI.dll</HintPath>
 	</Reference>
-	<Reference Include="UnityEngine.Netcode.Runtime">
-		<HintPath>..\\Lethal Company\\Lethal Company_Data\\Managed\\UnityEngine.NetCode.Runtime.dll</HintPath>
+	<Reference Include="Unity.Netcode.Runtime">
+		<HintPath>..\\Lethal Company\\Lethal Company_Data\\Managed\\Unity.Netcode.Runtime.dll</HintPath>
 	</Reference>
   </ItemGroup>
 </Project>

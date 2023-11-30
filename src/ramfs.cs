@@ -120,6 +120,7 @@ namespace BetterLCTerminal.fs
 
 		public Dir MkDir(string pathname)
 		{
+			TerminalMod.Instance.mls.LogDebug($"MKDIR {pathname}");
 			pathname = SanitizePathName(pathname);
 			if (!pathname.StartsWith("/"))
 				throw new Exception($"ENOENT: {pathname}");
@@ -153,6 +154,7 @@ namespace BetterLCTerminal.fs
 
 		public File Touch(string pathname)
 		{
+			TerminalMod.Instance.mls.LogDebug($"TOUCH {pathname}");
 			pathname = SanitizePathName(pathname);
 			if (!pathname.StartsWith("/"))
 				throw new Exception($"ENOENT: {pathname}");
@@ -186,6 +188,7 @@ namespace BetterLCTerminal.fs
 
 		public Link SymLink(string LinkFrom, string LinkTo)
 		{
+			TerminalMod.Instance.mls.LogDebug($"Link {LinkFrom}->{LinkTo}");
 			LinkFrom = SanitizePathName(LinkFrom);
 			if (!LinkFrom.StartsWith("/"))
 				throw new Exception($"ENOENT: {LinkFrom}");
@@ -212,11 +215,12 @@ namespace BetterLCTerminal.fs
 
 			Link symbolicLink = new()
 			{
-				Parent = (Dir)directoryToPlaceIn
+				Parent = (Dir)directoryToPlaceIn,
 			};
 			((Dir)directoryToPlaceIn).Entries.Add(linkName, symbolicLink);
 
-			symbolicLink.Refer = LookupPathTree(LinkTo[1..].Split("/"));
+			Stat LinkedNode = LookupPathTree(LinkTo[1..].Split("/"));
+			symbolicLink.Refer = LinkedNode;
 
 			return symbolicLink;
 		}
