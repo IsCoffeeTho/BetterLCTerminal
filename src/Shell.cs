@@ -12,7 +12,7 @@ namespace BetterLCTerminal
 
 		public Shell()
 		{
-			TerminalMod.Instance.mls.LogInfo($"Making FileSystem");
+			TerminalMod.mls.LogDebug($"Making FileSystem");
 			FileSystem = new();
 
 			FileSystem.MkDir("/etc");
@@ -27,16 +27,13 @@ namespace BetterLCTerminal
 
 			for (int i = 0; i < potentialCommands.Length; i++)
 			{
-				
 				Type cmd = potentialCommands[i];
-				
-				TerminalMod.Instance.mls.LogInfo($"Attemping to create program {cmd}");
-
 				if (cmd == null)
 					continue;
-
-				FileSystem.AssignProgram($"/bin/{cmd.Name.ToLower()}", (IProcess)Activator.CreateInstance(cmd)); // line needs a rewrite maybe
+				FileSystem.AssignProgram($"/bin/{cmd.Name.ToLower()}", (IProcess)Activator.CreateInstance(cmd));
 			}
+
+			TerminalMod.mls.LogDebug($"Completed FileSystem Creation");
 		}
 	}
 }

@@ -14,13 +14,34 @@ namespace BetterLCTerminal.fs
 		{
 			Root = new();
 		}
+
 		private string SanitizePathName(string pathname)
+		{
+			string[] _ = new string[0];
+			return SanitizePathName(pathname, out _);
+		}
+		private string SanitizePathName(string pathname, out string[] tree)
 		{
 			while (pathname.EndsWith("/") && pathname.Length != 1)
 			{
 				pathname = pathname.Substring(0, pathname.Length - 1);
 			}
-			return pathname;
+			string[] pathTree = pathname.Split("/");
+			List<string> sanitizedTree = new();
+			for (int i = 0; i < pathTree.Length; i++)
+			{
+				if (pathTree[i] == "..")
+				{
+					if (sanitizedTree.Count > 1)
+						sanitizedTree.RemoveAt(sanitizedTree.Count);
+				}
+				else if (pathTree[i] == "." || pathTree[i] == "")
+					continue;
+				else
+					sanitizedTree.Add(pathTree[i]);
+			}
+			tree = sanitizedTree.ToArray();
+			return $"/{sanitizedTree.Join(null, "/")}";
 		}
 		private Stat LookupPathTree(string[] pathTree)
 		{
@@ -82,11 +103,11 @@ namespace BetterLCTerminal.fs
 
 		public void Rm(string pathname)
 		{
-			pathname = SanitizePathName(pathname);
+			
+			pathname = SanitizePathName(pathname, out string[] pathTree);
 			if (!pathname.StartsWith("/"))
-				throw new Exception($"ENOENT: {pathname}");
+				throw new Exception($"EINVLD: {pathname}");
 
-			string[] pathTree = pathname[1..].Split("/");
 			string NameOfThingToRemove = pathTree.Last();
 			if (pathTree.Length == 0)
 				pathTree = new string[0];
@@ -107,25 +128,21 @@ namespace BetterLCTerminal.fs
 
 		public Stat StatPath(string pathname)
 		{
-			pathname = SanitizePathName(pathname);
+			
+			pathname = SanitizePathName(pathname, out string[] pathTree);
 			if (!pathname.StartsWith("/"))
-				throw new Exception($"ENOENT: {pathname}");
-
-			string[] pathTree = pathname[1..].Split("/");
-			if (pathTree.Length == 0)
-				pathTree = new string[0];
+				throw new Exception($"EINVLD: {pathname}");
 
 			return LookupPathTree(pathTree);
 		}
 
 		public Dir MkDir(string pathname)
 		{
-			TerminalMod.Instance.mls.LogDebug($"MKDIR {pathname}");
-			pathname = SanitizePathName(pathname);
+			
+			pathname = SanitizePathName(pathname, out string[] pathTree);
 			if (!pathname.StartsWith("/"))
-				throw new Exception($"ENOENT: {pathname}");
+				throw new Exception($"EINVLD: {pathname}");
 
-			string[] pathTree = pathname[1..].Split("/");
 			string dirName = pathTree.Last();
 			string[] parentTree;
 			if (pathTree.Length <= 1)
@@ -154,12 +171,10 @@ namespace BetterLCTerminal.fs
 
 		public File Touch(string pathname)
 		{
-			TerminalMod.Instance.mls.LogDebug($"TOUCH {pathname}");
-			pathname = SanitizePathName(pathname);
+			pathname = SanitizePathName(pathname, out string[] pathTree);
 			if (!pathname.StartsWith("/"))
-				throw new Exception($"ENOENT: {pathname}");
+				throw new Exception($"EINVLD: {pathname}");
 
-			string[] pathTree = pathname[1..].Split("/");
 			string fileName = pathTree.Last();
 			string[] parentTree;
 			if (pathTree.Length <= 1)
@@ -188,15 +203,13 @@ namespace BetterLCTerminal.fs
 
 		public Link SymLink(string LinkFrom, string LinkTo)
 		{
-			TerminalMod.Instance.mls.LogDebug($"Link {LinkFrom}->{LinkTo}");
-			LinkFrom = SanitizePathName(LinkFrom);
+			LinkFrom = SanitizePathName(LinkFrom, out string[] pathTree);
 			if (!LinkFrom.StartsWith("/"))
-				throw new Exception($"ENOENT: {LinkFrom}");
-			LinkTo = SanitizePathName(LinkTo);
+				throw new Exception($"EINVLD: {LinkFrom}");
+			LinkTo = SanitizePathName(LinkTo, out string[] resultTree);
 			if (!LinkTo.StartsWith("/"))
 				throw new Exception($"EINVLD: {LinkTo}");
 
-			string[] pathTree = LinkFrom[1..].Split("/");
 			string linkName = pathTree.Last();
 			string[] parentTree;
 			if (pathTree.Length <= 1)
@@ -219,7 +232,9 @@ namespace BetterLCTerminal.fs
 			};
 			((Dir)directoryToPlaceIn).Entries.Add(linkName, symbolicLink);
 
-			Stat LinkedNode = LookupPathTree(LinkTo[1..].Split("/"));
+			Stat LinkedNode = LookupPathTree(resultTree);
+			if (LinkedNode.Type == "Link")
+				throw new Exception($"ELNKV: {LinkFrom}");
 			symbolicLink.Refer = LinkedNode;
 
 			return symbolicLink;
@@ -227,12 +242,10 @@ namespace BetterLCTerminal.fs
 
 		public Pipe FIFO(string pathname)
 		{
-			pathname = SanitizePathName(pathname);
+			pathname = SanitizePathName(pathname, out string[] pathTree);
 			if (!pathname.StartsWith("/"))
-				throw new Exception($"ENOENT: {pathname}");
-			pathname = SanitizePathName(pathname);
+				throw new Exception($"EINVLD: {pathname}");
 
-			string[] pathTree = pathname[1..].Split("/");
 			string PipeName = pathTree.Last();
 			string[] parentTree;
 			if (pathTree.Length <= 1)
@@ -260,12 +273,10 @@ namespace BetterLCTerminal.fs
 		}
 		public Program AssignProgram(string pathname, IProcess program)
 		{
-			pathname = SanitizePathName(pathname);
+			pathname = SanitizePathName(pathname, out string[] pathTree);
 			if (!pathname.StartsWith("/"))
-				throw new Exception($"ENOENT: {pathname}");
-			pathname = SanitizePathName(pathname);
-
-			string[] pathTree = pathname[1..].Split("/");
+				throw new Exception($"EINVLD: {pathname}");
+			
 			string PipeName = pathTree.Last();
 			string[] parentTree;
 			if (pathTree.Length <= 1)
@@ -310,6 +321,7 @@ namespace BetterLCTerminal.fs
 	{
 		public new int Size = 256;
 		public string Buffer = "";
+		public int i = 0;
 	}
 
 	public class Program : Stat

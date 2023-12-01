@@ -1,9 +1,11 @@
 ﻿using System;
+using System.Collections;
 using BepInEx;
 using BepInEx.Configuration;
 using BepInEx.Logging;
 using HarmonyLib;
 using TMPro;
+using UnityEngine;
 
 namespace BetterLCTerminal
 {
@@ -15,7 +17,7 @@ namespace BetterLCTerminal
 		private readonly Harmony harmony = new(MOD_GUID);
 		public static TerminalMod Instance;
 		public static Shell __term;
-		public ManualLogSource mls;
+		public static ManualLogSource mls;
 		public ConfigEntry<int> CFG_textsize;
 		public void Awake()
 		{
@@ -28,9 +30,9 @@ namespace BetterLCTerminal
 			);
 			Instance.CFG_textsize.Value = Math.Max(Instance.CFG_textsize.Value, 10);
 
-			Instance.mls = BepInEx.Logging.Logger.CreateLogSource(MOD_GUID);
-			Instance.mls.LogInfo("Plugin BetterLCTerminal is loaded!");
-			Instance.mls.LogInfo("MOD_GUID: IsCoffeeTho.Terminal");
+			mls = BepInEx.Logging.Logger.CreateLogSource(MOD_GUID);
+			mls.LogInfo("Plugin BetterLCTerminal is loaded!");
+			mls.LogInfo("MOD_GUID: IsCoffeeTho.Terminal");
 
 			harmony.PatchAll(typeof(TerminalMod));
 		}
@@ -39,31 +41,43 @@ namespace BetterLCTerminal
 		[HarmonyPostfix]
 		static void InstantiateShell(ref TMP_InputField ___screenText)
 		{
-			Instance.mls.LogMessage("Instancing terminal");
+			mls.LogDebug("Terminal is present, creating a new shell");
+			__term = new();
+			mls.LogDebug(__term);
 			float scale = Instance.CFG_textsize.Value; // retrieves saved value
 			___screenText.pointSize = scale;
 			___screenText.caretWidth = (int)(scale / 2f);
 			___screenText.caretBlinkRate = 0;
-			__term = new();
 		}
 
-		[HarmonyPatch(typeof(Terminal), "selectTextFieldDelayed")]
+		[HarmonyPatch(typeof(Terminal), "BeginUsingTerminal")]
 		[HarmonyPrefix]
-		static bool InitializeShellSession()
+		static void InitializeShellSession()
 		{
-			Instance.mls.LogMessage("Opened terminal: creating session");
-			if (HUDManager.Instance != null)
-				HUDManager.Instance.ChangeControlTip(0, "Quit terminal : [TAB]", clearAllOther: true);
-			__term.FileSystem.MkDir("/tmp");
-			return true;
+			try
+			{
+				__term.FileSystem.MkDir("/tmp");
+				mls.LogDebug("Created Session");
+			}
+			catch (Exception s)
+			{
+				mls.LogError($"Problem starting Terminal Session: {s}");
+			}
 		}
 
 		[HarmonyPatch(typeof(Terminal), "QuitTerminal")]
 		[HarmonyPostfix]
 		static void ExitShellSession()
 		{
-			Instance.mls.LogMessage("Closed terminal: exiting session");
-			__term.FileSystem.Rm("/tmp");
+			try
+			{
+				__term.FileSystem.Rm("/tmp");
+				mls.LogDebug("Destroyed Session");
+			}
+			catch (Exception s)
+			{
+				mls.LogError($"Problem stopping Terminal Session: {s}");
+			}
 		}
 	}
 }
