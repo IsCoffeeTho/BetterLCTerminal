@@ -2,7 +2,7 @@ using HarmonyLib;
 using BetterLCTerminal;
 using System.Linq;
 
-namespace BetterLCTerminal.command
+namespace Terminal.command
 {
 	public class Echo : IProcess {
 

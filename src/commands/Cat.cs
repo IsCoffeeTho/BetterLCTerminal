@@ -1,6 +1,6 @@
 using BetterLCTerminal;
 
-namespace BetterLCTerminal.command
+namespace Terminal.command
 {
 	public class Cat : IProcess
 	{
