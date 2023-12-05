@@ -4,7 +4,6 @@ about: Let documentation authors know about discrepancies or lack of information
 title: 'Documentation: <subject>'
 labels: documentation
 assignees: IsCoffeeTho
-
 ---
 
 # Documentation Issue
@@ -13,6 +12,9 @@ assignees: IsCoffeeTho
 > * [ ] I have checked that my issue is not already being looked at by Documentation Author.
 > * [ ] I have made sure that my issue will help people if the change is made.
 
-## Additional Information
+## Where discrepency occurs
+[Wiki - Home Page](https://github.com/IsCoffeeTho/BetterLCTerminal/wiki)
+<!-- Example link -->
 
-<!-- This area is used for  -->
+## Additional Information
+<!-- Provide as much details as much  -->
