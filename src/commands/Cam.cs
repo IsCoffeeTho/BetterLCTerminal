@@ -1,6 +1,18 @@
+/* ========================================================================== */
+/*                                                                            */
+/*                                                             /   /   \      */
+/*   Made By IsCoffeeTho                                     /    |      \    */
+/*                                                          |     |       |   */
+/*   Cam.cs                                                 |      \      |   */
+/*                                                          |       |     |   */
+/*   Last Edited: 01:33AM 06/12/2023                         \      |    /    */
+/*                                                             \   /   /      */
+/*                                                                            */
+/* ========================================================================== */
+
 using BetterLCTerminal;
 
-namespace Terminal.command
+namespace BLCT.command
 {
 	public class Cam : IProcess
 	{

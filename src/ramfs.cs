@@ -1,3 +1,15 @@
+/* ========================================================================== */
+/*                                                                            */
+/*                                                             /   /   \      */
+/*   Made By IsCoffeeTho                                     /    |      \    */
+/*                                                          |     |       |   */
+/*   ramfs.cs                                               |      \      |   */
+/*                                                          |       |     |   */
+/*   Last Edited: 01:33AM 06/12/2023                         \      |    /    */
+/*                                                             \   /   /      */
+/*                                                                            */
+/* ========================================================================== */
+
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -128,7 +140,6 @@ namespace BetterLCTerminal.fs
 
 		public Stat StatPath(string pathname)
 		{
-			
 			pathname = SanitizePathName(pathname, out string[] pathTree);
 			if (!pathname.StartsWith("/"))
 				throw new Exception($"EINVLD: {pathname}");
@@ -138,7 +149,6 @@ namespace BetterLCTerminal.fs
 
 		public Dir MkDir(string pathname)
 		{
-			
 			pathname = SanitizePathName(pathname, out string[] pathTree);
 			if (!pathname.StartsWith("/"))
 				throw new Exception($"EINVLD: {pathname}");
@@ -233,9 +243,10 @@ namespace BetterLCTerminal.fs
 			((Dir)directoryToPlaceIn).Entries.Add(linkName, symbolicLink);
 
 			Stat LinkedNode = LookupPathTree(resultTree);
-			if (LinkedNode.Type == "Link")
-				throw new Exception($"ELNKV: {LinkFrom}");
+			
 			symbolicLink.Refer = LinkedNode;
+			if (LinkedNode.Type == "Link")
+				symbolicLink.Refer = ((Link)LinkedNode).Refer; // this will attempt to erase ELINKV
 
 			return symbolicLink;
 		}
@@ -320,8 +331,9 @@ namespace BetterLCTerminal.fs
 	public class Pipe : Stat
 	{
 		public new int Size = 256;
-		public string Buffer = "";
-		public int i = 0;
+		public char[] Buffer = new char[256];
+		public byte write_idx = 0;
+		public byte read_idx = 0;
 	}
 
 	public class Program : Stat
@@ -345,7 +357,7 @@ namespace BetterLCTerminal.fs
 		{
 			get
 			{
-				return this.GetType().Name;
+				return GetType().Name;
 			}
 		}
 		public Dir Parent = null;

@@ -1,11 +1,23 @@
-﻿using System;
-using System.Collections;
+﻿/* ========================================================================== */
+/*                                                                            */
+/*                                                             /   /   \      */
+/*   Made By IsCoffeeTho                                     /    |      \    */
+/*                                                          |     |       |   */
+/*   Plugin.cs                                              |      \      |   */
+/*                                                          |       |     |   */
+/*   Last Edited: 01:33AM 06/12/2023                         \      |    /    */
+/*                                                             \   /   /      */
+/*                                                                            */
+/* ========================================================================== */
+
+using System;
 using BepInEx;
 using BepInEx.Configuration;
 using BepInEx.Logging;
 using HarmonyLib;
-using TMPro;
 using UnityEngine;
+using UnityEngine.InputSystem;
+using UnityEngine.UI;
 
 namespace BetterLCTerminal
 {
@@ -39,23 +51,71 @@ namespace BetterLCTerminal
 
 		[HarmonyPatch(typeof(Terminal), "Start")]
 		[HarmonyPostfix]
-		static void InstantiateShell(ref TMP_InputField ___screenText)
+		static void InstantiateShell(Terminal __instance)
 		{
-			mls.LogDebug("Terminal is present, creating a new shell");
-			__term = new();
-			mls.LogDebug(__term);
-			float scale = Instance.CFG_textsize.Value; // retrieves saved value
-			___screenText.pointSize = scale;
-			___screenText.caretWidth = (int)(scale / 2f);
-			___screenText.caretBlinkRate = 0;
+			try
+			{
+				float scale = Instance.CFG_textsize.Value; // retrieves saved value
+				__instance.screenText.pointSize = scale;
+				__instance.screenText.caretWidth = (int)(scale / 2f);
+				__instance.screenText.caretBlinkRate = 0;
+				__instance.inputFieldText.color = Color.white;
+				__instance.terminalUIScreen.renderMode = RenderMode.ScreenSpaceOverlay;
+				__instance.terminalUIScreen.scaleFactor = 2.25f;
+				__instance.topRightText.enabled = false;
+				try
+				{
+					// disables the backdrop of the money indicator
+					__instance.terminalUIScreen.gameObject.transform
+						.GetChild(0) // container
+						.GetChild(5) // money indicator image
+						.gameObject.GetComponent<Image>()
+							.enabled = false;
+					// may fail in the future
+				}
+				catch (Exception err)
+				{
+					_ = err; // discard
+				}
+
+				__term = null;
+			}
+			catch (Exception s)
+			{
+				mls.LogError($"Problem Creating Terminal: {s}");
+			}
+		}
+
+		[HarmonyPatch(typeof(Terminal), "Update")]
+		[HarmonyPrefix]
+		static void ReplacedUpdate(Terminal __instance)
+		{
+			if (HUDManager.Instance == null || GameNetworkManager.Instance == null || GameNetworkManager.Instance.localPlayerController == null)
+			{
+				return;
+			}
+			if (__instance.terminalInUse)
+			{
+				if (Keyboard.current.anyKey.wasPressedThisFrame)
+				{
+
+				}
+			}
 		}
 
 		[HarmonyPatch(typeof(Terminal), "BeginUsingTerminal")]
 		[HarmonyPrefix]
 		static void InitializeShellSession()
 		{
+			GameNetworkManager.Instance.localPlayerController.IsInspectingItem = true;
+			// this disables camera movement
 			try
 			{
+				if (__term == null)
+				{
+					mls.LogDebug("Terminal has been instantiated, creating a new shell");
+					__term = new();
+				}
 				__term.FileSystem.MkDir("/tmp");
 				mls.LogDebug("Created Session");
 			}
@@ -69,6 +129,8 @@ namespace BetterLCTerminal
 		[HarmonyPostfix]
 		static void ExitShellSession()
 		{
+			GameNetworkManager.Instance.localPlayerController.IsInspectingItem = false;
+			// this re-enables camera movement
 			try
 			{
 				__term.FileSystem.Rm("/tmp");

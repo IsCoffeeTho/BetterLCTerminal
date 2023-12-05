@@ -5,7 +5,7 @@
 #                                                            |     |       |   #
 #   Makefile                                                 |      \      |   #
 #                                                            |       |     |   #
-#   Last Edited: 11:42PM 28/11/2023                           \      |    /    #
+#   Last Edited: 01:25AM 06/12/2023                           \      |    /    #
 #                                                               \   /   /      #
 #                                                                              #
 # ============================================================================ #
@@ -18,6 +18,8 @@ dll:
 	dotnet build
 
 package:
+	-rm mod/README.md
+	cp README.md mod/README.md
 	cp bin/Debug/netstandard2.1/${MOD}.dll mod/BepInEx/plugins/${MOD}.dll
 	cd mod && zip -r ${MOD} ./*
 	mv mod/${MOD}.zip ${MOD}.zip

@@ -1,3 +1,15 @@
+<!-- ======================================================================= -->
+<!--                                                                         -->
+<!--                                                          /   /   \      -->
+<!--   Made By IsCoffeeTho                                  /    |      \    -->
+<!--                                                       |     |       |   -->
+<!--   BetterLCTerminal.csproj                             |      \      |   -->
+<!--                                                       |       |     |   -->
+<!--   Last Edited: 01:34AM 06/12/2023                      \      |    /    -->
+<!--                                                          \   /   /      -->
+<!--                                                                         -->
+<!-- ======================================================================= -->
+
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
@@ -29,6 +41,9 @@
 	</Reference>
 	<Reference Include="UnityEngine.UI">
 		<HintPath>..\\Lethal Company\\Lethal Company_Data\\Managed\\UnityEngine.UI.dll</HintPath>
+	</Reference>
+	<Reference Include="UnityEngine.InputSystem">
+		<HintPath>..\\Lethal Company\\Lethal Company_Data\\Managed\\Unity.InputSystem.dll</HintPath>
 	</Reference>
 	<Reference Include="Unity.Netcode.Runtime">
 		<HintPath>..\\Lethal Company\\Lethal Company_Data\\Managed\\Unity.Netcode.Runtime.dll</HintPath>
