@@ -3,5 +3,9 @@
 !.gitignore
 *.dll
 *.zip
+
+mod/README.md
+mod/BepInEx
+
 bin
 obj

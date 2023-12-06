@@ -5,7 +5,7 @@
 /*                                                          |     |       |   */
 /*   Plugin.cs                                              |      \      |   */
 /*                                                          |       |     |   */
-/*   Last Edited: 01:33AM 06/12/2023                         \      |    /    */
+/*   Last Edited: 12:17AM 07/12/2023                         \      |    /    */
 /*                                                             \   /   /      */
 /*                                                                            */
 /* ========================================================================== */
@@ -51,38 +51,63 @@ namespace BetterLCTerminal
 
 		[HarmonyPatch(typeof(Terminal), "Start")]
 		[HarmonyPostfix]
-		static void InstantiateShell(Terminal __instance)
+		static void RemovePreviousShell(Terminal __instance)
 		{
 			try
 			{
-				float scale = Instance.CFG_textsize.Value; // retrieves saved value
-				__instance.screenText.pointSize = scale;
-				__instance.screenText.caretWidth = (int)(scale / 2f);
-				__instance.screenText.caretBlinkRate = 0;
-				__instance.inputFieldText.color = Color.white;
-				__instance.terminalUIScreen.renderMode = RenderMode.ScreenSpaceOverlay;
-				__instance.terminalUIScreen.scaleFactor = 2.25f;
-				__instance.topRightText.enabled = false;
-				try
-				{
-					// disables the backdrop of the money indicator
-					__instance.terminalUIScreen.gameObject.transform
-						.GetChild(0) // container
-						.GetChild(5) // money indicator image
-						.gameObject.GetComponent<Image>()
-							.enabled = false;
-					// may fail in the future
-				}
-				catch (Exception err)
-				{
-					_ = err; // discard
-				}
-
 				__term = null;
 			}
 			catch (Exception s)
 			{
 				mls.LogError($"Problem Creating Terminal: {s}");
+			}
+		}
+
+		public void ChangeUI(Terminal _this)
+		{
+			float scale = Instance.CFG_textsize.Value; // retrieves saved value
+			_this.screenText.pointSize = scale + 4f;
+			_this.screenText.caretWidth = (int)(scale / 2f);
+			_this.screenText.caretBlinkRate = 0;
+			_this.inputFieldText.color = Color.white;
+			_this.terminalUIScreen.renderMode = RenderMode.ScreenSpaceOverlay;
+			_this.terminalUIScreen.scaleFactor = 1f;
+			_this.topRightText.enabled = false;
+			_this.screenText.image.color = Color.black;
+			float ScreenAspect = (Screen.currentResolution.height - 100f) / 3f;
+			RectTransform BackdropRect = _this.screenText.GetComponent<RectTransform>();
+			
+			// unhappy with result
+			BackdropRect.anchorMax.Set(1f, 1f);
+			BackdropRect.anchorMin.Set(0f, 0f);
+			BackdropRect.sizeDelta.Set(ScreenAspect * 4, ScreenAspect * 3);
+			BackdropRect.anchoredPosition.Set(0f, 0f);
+			BackdropRect.anchoredPosition3D.Set(0f, 0f, -1f);
+			
+			_this.terminalUIScreen.gameObject.transform
+				.GetChild(0)
+				.GetChild(5)
+				.gameObject.GetComponent<Image>()
+					.enabled = false;
+		}
+
+		[HarmonyPatch(typeof(Terminal), "BeginUsingTerminal")]
+		[HarmonyPrefix]
+		static void InitializeShellSession(Terminal __instance)
+		{
+			GameNetworkManager.Instance.localPlayerController.IsInspectingItem = true;
+			// this disables camera movement
+			try
+			{
+				if (__term == null)
+					__term = new();
+				Instance.ChangeUI(__instance);
+				__term.FileSystem.MkDir("/tmp");
+				mls.LogDebug("Created Session");
+			}
+			catch (Exception s)
+			{
+				mls.LogError($"Problem starting Terminal Session: {s}");
 			}
 		}
 
@@ -100,28 +125,6 @@ namespace BetterLCTerminal
 				{
 
 				}
-			}
-		}
-
-		[HarmonyPatch(typeof(Terminal), "BeginUsingTerminal")]
-		[HarmonyPrefix]
-		static void InitializeShellSession()
-		{
-			GameNetworkManager.Instance.localPlayerController.IsInspectingItem = true;
-			// this disables camera movement
-			try
-			{
-				if (__term == null)
-				{
-					mls.LogDebug("Terminal has been instantiated, creating a new shell");
-					__term = new();
-				}
-				__term.FileSystem.MkDir("/tmp");
-				mls.LogDebug("Created Session");
-			}
-			catch (Exception s)
-			{
-				mls.LogError($"Problem starting Terminal Session: {s}");
 			}
 		}
 

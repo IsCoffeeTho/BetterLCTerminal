@@ -5,7 +5,7 @@
 /*                                                          |     |       |   */
 /*   stdlib.cs                                              |      \      |   */
 /*                                                          |       |     |   */
-/*   Last Edited: 01:34AM 06/12/2023                         \      |    /    */
+/*   Last Edited: 11:41PM 06/12/2023                         \      |    /    */
 /*                                                             \   /   /      */
 /*                                                                            */
 /* ========================================================================== */
@@ -38,6 +38,10 @@ namespace BetterLCTerminal
 			return FileDescriptorTable[fd].Read();
 		}
 
+		public void Exit(int exitCode = 0) {
+			
+		}
+
 		// public int Open(string pathname) // relative
 		// {
 			
@@ -52,15 +56,6 @@ namespace BetterLCTerminal
 		void Write(string text);
 	}
 
-	class Pipe
-	{
-		public Pipe()
-		{
-
-		}
-
-
-	}
 	public interface IProcess
 	{
 		int Main(StdLib p, string[] args);
