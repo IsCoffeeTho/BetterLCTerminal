@@ -5,7 +5,7 @@
 /*                                                          |     |       |   */
 /*   Shell.cs                                               |      \      |   */
 /*                                                          |       |     |   */
-/*   Last Edited: 01:34AM 06/12/2023                         \      |    /    */
+/*   Last Edited: 03:13AM 06/12/2023                         \      |    /    */
 /*                                                             \   /   /      */
 /*                                                                            */
 /* ========================================================================== */
@@ -67,8 +67,6 @@ namespace BetterLCTerminal
 				TerminalMod.mls.LogDebug($"making /home");
 				FileSystem.MkDir("/home");
 				FileSystem.MkDir($"/home/{GameNetworkManager.Instance.localPlayerController.playerUsername}");
-				FileSystem.MkDir("/home/sigurd");
-
 				TerminalMod.mls.LogDebug($"Completed FileSystem Creation");
 			}
 			catch (Exception s)
